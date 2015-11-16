@@ -1,0 +1,265 @@
+#include <allegro.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "teclado.h"
+
+volatile int exit_program = FALSE;
+
+
+void keyboard_input()
+{
+   int x;
+
+   for(x = 0; x < KEY_MAX; x++)
+     teclas_anteriores[x] = key[x];
+
+   poll_keyboard();
+}
+
+int apertou(int TECLA)
+{
+    return(teclas_anteriores[TECLA] == 0 && key[TECLA] != 0);
+}
+
+int segurou(int TECLA)
+{
+    return(teclas_anteriores[TECLA] != 0 && key[TECLA] != 0);
+}
+
+int soltou(int TECLA)
+{
+    return(teclas_anteriores[TECLA] != 0 && key[TECLA] == 0);
+}
+
+void fecha_programa()
+{
+    exit_program = TRUE;
+}
+END_OF_FUNCTION(fecha_programa)
+
+void close_program()
+{
+    exit_program = TRUE;
+}
+END_OF_FUNCTION(close_program);
+
+int main()
+{
+    allegro_init();
+    install_timer();
+    install_keyboard();
+    set_color_depth(32);
+    set_gfx_mode(GFX_AUTODETECT_WINDOWED, 600, 450, 0, 0);// 12 horiz, 9 vertical
+    set_window_title("Sokoban");
+
+    LOCK_VARIABLE(exit_program);
+    LOCK_FUNCTION(close_program);
+
+    set_close_button_callback(close_program);
+
+    ///VARIAVEIS
+    /*
+        1 = MURO
+        2 = CHAO
+        3 = BONECO
+        5 = BURACO
+        7 = PEDRA
+    */
+    int posicoesAtuais[7][9] = {
+        {1, 1  , 1  , 1  ,   1,   1, 1},
+        {1, 1  , 2  , 2  ,   2*5, 2, 1},
+        {1, 2  , 2*7, 2  ,   1,   2, 1},
+        {1, 2  , 2*5, 2*7,   2,   2, 1},
+        {1, 2  , 2  , 1  , 2*7,   1, 1},
+        {1, 2*5, 2  , 2*3, 2,   1, 1},
+        {1, 1  , 1  , 1  ,   1,   1, 1}
+        };
+    int inicio[7][9] = {
+        {1, 1  , 1  , 1  ,   1,   1, 1},
+        {1, 1  , 2  , 2  ,   2*5, 2, 1},
+        {1, 2  , 2*7, 2  ,   1,   2, 1},
+        {1, 2  , 2*5, 2*7,   2,   2, 1},
+        {1, 2  , 2  , 1  , 2*7,   1, 1},
+        {1, 2*5, 2  , 2*3, 2,   1, 1},
+        {1, 1  , 1  , 1  ,   1,   1, 1}
+        };
+    int mapaAcabou = 1;
+    int i, k;
+    int soma_linha = 0;
+    int soma_coluna = 0;
+    int stop = FALSE;
+    int mapaValido;
+    int back_up[7][9];
+
+    ///BITMAPS
+    BITMAP* buffer = create_bitmap(SCREEN_W, SCREEN_H);
+    BITMAP* boneco = load_bitmap("sprites/boneco2.bmp", NULL);
+    BITMAP* fase_1 = load_bitmap("sprites/fase-1-facil.bmp", NULL);
+    BITMAP* meta = load_bitmap("sprites/meta.bmp", NULL);
+    BITMAP* background = load_bitmap("sprites/background.bmp", NULL);
+
+    /// GAME LOOP
+    while(!exit_program)
+    {
+        //verificar se o mapa acabou
+
+        for (i = 0; i < 7; i++)
+        {
+            for (k = 0; k < 7; k++)
+            {
+                if (posicoesAtuais[i][k] % 5 == 0 && posicoesAtuais[i][k] % 7 != 0)
+                {
+                    mapaAcabou = 0;
+                }
+            }
+        }
+
+        if (mapaAcabou) {
+            printf("I'M THE ONE WHO KNOCKS !!!");
+        }
+
+        //INPUT
+        if(key[KEY_ESC])
+        {
+            fecha_programa();
+        }
+
+        keyboard_input();
+
+        //BACKUP DO ESTADO DO ARRAY
+        for (i = 0; i < 7; i++)
+        {
+            for (k = 0; k < 7; k++)
+            {
+                back_up[i][k] = posicoesAtuais[i][k];
+            }
+        }
+
+        //UPDATE
+
+        soma_linha = 0;
+        soma_coluna = 0;
+
+        if(apertou(KEY_UP))
+        {
+           soma_linha = -1;
+        }
+        else if(apertou(KEY_DOWN))
+        {
+            soma_linha = 1;
+        }
+        else if(apertou(KEY_LEFT))
+        {
+            soma_coluna = -1;
+        }
+        else if(apertou(KEY_RIGHT))
+        {
+            soma_coluna = 1;
+        } else if(apertou(KEY_R)) {
+            for (i = 0; i < 7; i++)
+            {
+                for (k = 0; k < 7; k++)
+                {
+                    posicoesAtuais[i][k] = inicio[i][k];
+                }
+            }
+        }
+
+
+        //andar boneco
+
+        for (i = 0; i < 7 && !stop; i++) {
+            for (k = 0; k < 7 && !stop; k++) {
+                if (posicoesAtuais[i][k] % 3 == 0) {
+                    // celula = boneco
+                    //printf("%d %d %d\n", i, k, posicoesAtuais[i][k]);
+                    posicoesAtuais[i][k] = posicoesAtuais[i][k]/3;
+                    posicoesAtuais[i+soma_linha][k+soma_coluna] = posicoesAtuais[i+soma_linha][k+soma_coluna]*3;
+                    stop = TRUE;
+                }
+            }
+        }
+
+        //andar pedra (verificar se o boneco esta em cima da pedra
+        stop = FALSE;
+        for (i = 0; i < 7 && !stop; i++) {
+            for (k = 0; k < 7 && !stop; k++) {
+                //pedra em cima do boneco
+                if (posicoesAtuais[i][k] % 42 == 0) {
+                    posicoesAtuais[i][k] = posicoesAtuais[i][k]/7;
+                    posicoesAtuais[i+soma_linha][k+soma_coluna] = posicoesAtuais[i+soma_linha][k+soma_coluna]*7;
+                    stop = TRUE;
+                }
+            }
+        }
+
+        //verificar se todas posicoes estao validas
+        //verificar se as pedras (7) e o boneco (3) nao estao em cima de um lugar que nao pode ficar (!= %2)
+        stop = FALSE;
+
+        mapaValido = 1;
+        for (i = 0; i < 7 && !stop; i++) {
+            for (k = 0; k < 7 && !stop; k++)
+            {
+                //se uma pedra ou boneco ficou em cima do muro
+                if ((posicoesAtuais[i][k] % 3 == 0 || posicoesAtuais[i][k] % 7 == 0) && posicoesAtuais[i][k] % 2 != 0)
+                {
+                    mapaValido = 0;
+                    stop = TRUE;
+                }
+                //verificar se uma pedra ficou em cima de outra
+                if (posicoesAtuais[i][k] % 49 == 0)
+                {
+                    mapaValido = 0;
+                    stop = TRUE;
+                }
+            }
+        }
+
+        if (!mapaValido) {
+            for (i = 0; i < 7; i++)
+            {
+                for (k = 0; k < 7; k++)
+                {
+                    posicoesAtuais[i][k] = back_up[i][k];
+                }
+            }
+        }
+
+        //DRAW
+
+        draw_sprite(buffer, background, 0, 0);
+        draw_sprite(buffer, fase_1, 100, 50);
+
+        //TODO tirar este 7 e coloca numa constante
+        for (i = 0; i < 7; i++)
+        {
+            for (k = 0; k < 7; k++)
+            {
+                if (posicoesAtuais[i][k] % 7 == 0)
+                {
+                    // celula = pedra
+                    draw_sprite(buffer, meta, k*50+100, i*50+50);
+                }
+                if (posicoesAtuais[i][k] % 3 == 0)
+                {
+                    // celula = boneco
+                    draw_sprite(buffer, boneco, k*50+100, i*50+50);
+                }
+            }
+        }
+        draw_sprite(screen, buffer, 0, 0);
+        clear_to_color(buffer, makecol(255,255,255));
+    }
+
+    destroy_bitmap(background);
+    destroy_bitmap(fase_1);
+    destroy_bitmap(boneco);
+    destroy_bitmap(meta);
+    destroy_bitmap(buffer);
+
+    return 0;
+
+    allegro_exit();
+}
+END_OF_MAIN();

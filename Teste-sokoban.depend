@@ -1,0 +1,41 @@
+# depslib dependency file v1.0
+1433997353 source:c:\users\t430\teste-sokoban\main.c
+	<allegro.h>
+
+1433997475 source:c:\users\t430\teste-sokoban\testano.c
+
+1447121833 source:c:\users\t430\documents\ufal\p1 - baldoino\teste-sokoban\main.c
+	<allegro.h>
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<ctype.h>
+	"teclado.h"
+	"menu.h"
+	"inicializacao.h"
+	"fase_1.h"
+	"fase_2.h"
+	"fase_3.h"
+	"instrucao.h"
+	"parabens.h"
+	"ranking.h"
+
+1447029709 c:\users\t430\documents\ufal\p1 - baldoino\teste-sokoban\teclado.h
+	<allegro.h>
+
+1447182386 c:\users\t430\documents\ufal\p1 - baldoino\teste-sokoban\menu.h
+
+1447182386 c:\users\t430\documents\ufal\p1 - baldoino\teste-sokoban\inicializacao.h
+
+1447182386 c:\users\t430\documents\ufal\p1 - baldoino\teste-sokoban\fase_1.h
+
+1447182386 c:\users\t430\documents\ufal\p1 - baldoino\teste-sokoban\fase_2.h
+
+1447182386 c:\users\t430\documents\ufal\p1 - baldoino\teste-sokoban\fase_3.h
+
+1447182386 c:\users\t430\documents\ufal\p1 - baldoino\teste-sokoban\instrucao.h
+
+1447182970 c:\users\t430\documents\ufal\p1 - baldoino\teste-sokoban\parabens.h
+
+1447182386 c:\users\t430\documents\ufal\p1 - baldoino\teste-sokoban\ranking.h
+
